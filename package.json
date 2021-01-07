@@ -1,0 +1,28 @@
+{
+  "name": "social-pressure-bot",
+  "version": "1.0.0",
+  "description": "For hacknroll, taskbot which depends on social pressure. Bot will send a notif to your friends whenever you have completed a task and vice versa, so that you'll be pressured to complete your work more quickly.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hecknroll/hecc.git"
+  },
+  "keywords": [
+    "hacknroll",
+    "hecc"
+  ],
+  "author": "Jace, Gabby and Rachel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hecknroll/hecc/issues"
+  },
+  "homepage": "https://github.com/hecknroll/hecc#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "dotenv": "^8.2.0",
+    "telegraf": "^3.38.0"
+  }
+}
