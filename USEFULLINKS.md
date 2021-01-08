@@ -5,3 +5,5 @@ https://github.com/yagop/node-telegram-bot-api/issues/113 : getting user respons
 https://github.com/hosein2398/node-telegram-bot-api-tutorial#keyboards
 
 https://medium.com/javascript-in-plain-english/javascript-naming-convention-best-practices-b2065694b7d : JS conventions
+
+https://stackoverflow.com/questions/762011/whats-the-difference-between-using-let-and-var : when to use let vs var

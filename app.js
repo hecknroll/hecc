@@ -1,6 +1,4 @@
 require("dotenv").config();
-const { forEach } = require("lodash");
-const { listenerCount } = require("node-telegram-bot-api");
 
 //initialise telegram bot (nodejs api)
 const BotToken = process.env.BOT_TOKEN;
@@ -54,7 +52,7 @@ function doneBotResponse(doneIndex, message) {
   if (doneIndex > 0 && doneIndex <= tasklist.length) {
     var doneTask = tasklist[doneIndex - 1];
     telegram.sendMessage(
-      message.from.id,
+      message.chat.id,
       "Everyone, " +
         message.from.first_name +
         " is done with " +
@@ -97,19 +95,16 @@ telegram.onText(/\/pmme/, (message) => {
   //then reply to the user with a message
   telegram.sendMessage(
     message.from.id,
-    "Hello, my friend, " + message.from.first_name + ", you sneaky chump."
+    "Hello " + message.from.first_name + ", you sneaky chump."
   );
 });
 
-//listen for 'addStressor' bot command
+//listen for 'addStressor' bot command with no task provided
 telegram.onText(/\/addstressor/, (message) => {
-  //   if (message.text.toLowerCase().indexOf("/addstressor") === 0) {
-  //strip the command from the string, to get the user_text
-  //var user_text = message.text.split("/addstress ");
   telegram
     .sendMessage(
       message.chat.id,
-      "What new task would you like to stress everyone about?"
+      "What new task would you like to stress everyone about?\n(Simply reply to this message with your task.)"
     )
     .then(() => {
       return telegram.onNextMessage(
@@ -128,16 +123,32 @@ telegram.onText(/\/addstressor/, (message) => {
     });
 });
 
-//listen for 'done' bot command
+// //listen for 'addStressor' bot command with task provided
+// telegram.onText(/\/addstressor (.+)/, (message, match) => {
+//   //   if (message.text.toLowerCase().indexOf("/addstressor") === 0) {
+//   //strip the command from the string, to get the user_text
+//   //var user_text = message.text.split("/addstress ");
+//   var stressor = match[1];
+//   console.log("match = " + match);
+//   console.log("match1 = " + stressor);
+//   newStress(message.chat.id, stressor);
+//   telegram.sendMessage(
+//     message.chat.id,
+//     "I've added a new task to stress everyone with! Now we can all stress about " +
+//       stressor +
+//       " together. How exciting!"
+//   );
+// });
+
+//listen for 'done' bot command with no index provided
 telegram.onText(/\/done/, (message) => {
-  //   if (message.text.toLowerCase().indexOf("/done") === 0) {
-  //     //strip the command from the string, to get the user_text (aka index of done task)
-  //     var doneIndex = message.text.slice(6);
-  // if (doneIndex === "") {
+  // if (message.text.toLowerCase().indexOf("/done") === 0) {
+  //   //strip the command from the string, to get the user_text (aka index of done task)
+  //   var doneIndex = message.text.slice(6);
   telegram
     .sendMessage(
       message.chat.id,
-      "Which task are you done with?\nSend me the index of the task."
+      "Which task are you done with?\nSend me the index of the task.\n(Simply reply this message with your task.)"
     )
     .then(() => {
       return telegram.onNextMessage(
@@ -149,14 +160,24 @@ telegram.onText(/\/done/, (message) => {
       doneBotResponse(doneIndex, message);
     });
   //check if its a valid "index" number
-  // }
-  // else {
-  //   var doneIndex = message.text;
-  //   doneBotResponse(doneIndex, message);
-  // }
   //iterate through array to see what's stored
   //tasklist.forEach(item => console.log(item));
 });
+
+//listen for 'done' bot command with index provided
+telegram.onText(
+  /\/done (.+)/,
+  (message, match) => {
+    // if (message.text.toLowerCase().indexOf("/done") === 0) {
+    //   //strip the command from the string, to get the user_text (aka index of done task)
+    //   var doneIndex = message.text.slice(6);
+    var doneIndex = match[1];
+    // var doneIndex = message.text;
+    doneBotResponse(doneIndex, message);
+  }
+  //iterate through array to see what's stored
+  //tasklist.forEach(item => console.log(item));
+);
 
 //listen for 'listStressors' bot command
 telegram.onText(/\/liststressors/, (message) => {
