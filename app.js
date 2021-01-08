@@ -2,25 +2,27 @@ require("dotenv").config();
 const { forEach } = require("lodash");
 const { listenerCount } = require("node-telegram-bot-api");
 
+//initialise telegram bot (nodejs api)
 const BotToken = process.env.BOT_TOKEN;
 var TelegramBot = require("node-telegram-bot-api"),
   telegram = new TelegramBot(BotToken, { polling: true });
 
-//initialise global user array
+//initialise global list array
 let chatTasklistMap = new Map();
 let tasklist = [];
-var user_array = [];
-//scan array for user
-function auth_usr(telegram_id) {
-  for (var i = 0; i < user_array.length; i++) {
-    if (user_array[i].tele_id === telegram_id) {
-      return i;
-    }
-  }
-  return 0;
-}
 
-// function to store following messages from user
+// var user_array = [];
+// //scan array for user
+// function auth_usr(telegram_id) {
+//   for (var i = 0; i < user_array.length; i++) {
+//     if (user_array[i].tele_id === telegram_id) {
+//       return i;
+//     }
+//   }
+//   return 0;
+// }
+
+// (part 1: User response) function to store subsequent messages from user
 telegram.nextMessage = {};
 telegram.onNextMessage = (chatId, callback) => {
   let promise = new Promise((resolve) => {
@@ -29,7 +31,7 @@ telegram.onNextMessage = (chatId, callback) => {
   return promise;
 };
 
-// telegram bot to listen to any incoming message
+// (part 2: User response) telegram bot to listen to any incoming message from user
 telegram.on("message", (message) => {
   let nextMsg = telegram.nextMessage[message.chat.id];
   if (nextMsg) {
@@ -39,11 +41,27 @@ telegram.on("message", (message) => {
   }
 });
 
-// function to add new task item into task list
+// (FOR /newStressor COMMAND) function to add new task item into task list
 function newStress(telegramChatId, newTask) {
   //   if (chatTasklistMap.has(telegramChatId)) {
   tasklist.push(newTask);
   chatTasklistMap.set(telegramChatId, { tasklist: tasklist });
+}
+
+// (FOR /done COMMAND) function to complete task item at specified index of task list
+function doneBotResponse(doneIndex, message) {
+  doneIndex = parseInt(doneIndex, 10);
+  if (doneIndex > 0 && doneIndex <= tasklist.length) {
+    var doneTask = tasklist[doneIndex - 1];
+    telegram.sendMessage(
+      message.from.id,
+      "Everyone, " +
+        message.from.first_name +
+        " is done with " +
+        doneTask.toString() +
+        ". Better hurry up or you'll be the last to finish!"
+    );
+  }
 }
 
 //declare bot logic, on text event
@@ -77,7 +95,7 @@ telegram.on("text", (message) => {
     //then reply to the user with a message
     telegram.sendMessage(
       message.from.id,
-      "Hello, " + message.from.first_name + " you sneaky bastard."
+      "Hello, my friend, " + message.from.first_name + ", you sneaky chump."
     );
   }
 
@@ -97,6 +115,7 @@ telegram.on("text", (message) => {
         );
       })
       .then(() => {
+        newStress(message.chat.id, stressor);
         telegram.sendMessage(
           message.chat.id,
           "I've added a new task to stress everyone with! Now we can all stress about " +
@@ -108,24 +127,27 @@ telegram.on("text", (message) => {
 
   //listen for 'done' bot command
   if (message.text.toLowerCase().indexOf("/done") === 0) {
-    //strip the command from the string, to get the user_text
-    var user_text = message.text.slice(6);
-    if (user_text === "") {
-      telegram.sendMessage(message.from.id, "Which task are you done with?");
+    //strip the command from the string, to get the user_text (aka index of done task)
+    var doneIndex = message.text.slice(6);
+    if (doneIndex === "") {
+      telegram
+        .sendMessage(
+          message.chat.id,
+          "Which task are you done with?\nSend me the index of the task."
+        )
+        .then(() => {
+          return telegram.onNextMessage(
+            message.chat.id,
+            (message) => (doneIndex = message.text)
+          );
+        })
+        .then(() => {
+          doneBotResponse(doneIndex, message);
+        });
       //check if its a valid "index" number
     } else {
-      var user_text = message.text;
-      if (user_text > 0 && user_text <= tasklist.length) {
-        var doneTask = tasklist[user_array - 1];
-        telegram.sendMessage(
-          message.from.id,
-          "Everyone, " +
-            message.from.first_name +
-            " is done with " +
-            doneTask.toString() +
-            ". Better hurry up or you'll be the last to finish!"
-        );
-      }
+      var doneIndex = message.text;
+      doneBotResponse(doneIndex, message);
     }
     //iterate through array to see what's stored
     //tasklist.forEach(item => console.log(item));
@@ -138,7 +160,6 @@ telegram.on("text", (message) => {
     tasklist.forEach((stressor) => {
       stressList += i + ". " + stressor + "\n";
       i += 1;
-      console.log(stressList);
     });
     telegram.sendMessage(
       message.chat.id,
@@ -152,7 +173,6 @@ telegram.on("text", (message) => {
   if (message.text.toLowerCase().indexOf("/everyonesdone") === 0) {
     //strip the command from the string, to get the user_text
     var user_text = message.text.slice(14);
-    console.log(user_text);
     if (user_text === "") {
       telegram.sendMessage(message.from.id, "Which task are you done with?");
 
@@ -173,7 +193,6 @@ telegram.on("text", (message) => {
 
     //iterate through array to see what's stored
     //tasklist.forEach(item => console.log(item));
-    return;
   }
 
   telegram.onText(/\/commands/, (msg) => {
@@ -212,7 +231,7 @@ telegram.on("text", (message) => {
   telegram.on("audio", (message) => {
     telegram.sendMessage(
       message.from.id,
-      "*Audio Received*\nYou sent audio to me.",
+      "*Audio Received*\nYou sent audio to me, I would love to listen to it but I'm too busy stressing for you right now.",
       { parse_mode: "Markdown" }
     );
   });
@@ -220,15 +239,16 @@ telegram.on("text", (message) => {
   telegram.on("document", (message) => {
     telegram.sendMessage(
       message.from.id,
-      "*Document Received*\nYou sent a document to me.",
+      "*Document Received*\nYou sent a document to me, thanks but I can't help you with that.",
       { parse_mode: "Markdown" }
     );
   });
   //receive sticker content
   telegram.on("sticker", (message) => {
+    console.log("aaaaa");
     telegram.sendMessage(
       message.from.id,
-      "*Sticker Received*\nYou sent a sticker to me.",
+      "*Sticker Received*\nYou sent a sticker to me, looks nice, but I have no use for it for now.",
       { parse_mode: "Markdown" }
     );
   });
@@ -236,15 +256,16 @@ telegram.on("text", (message) => {
   telegram.on("video", (message) => {
     telegram.sendMessage(
       message.from.id,
-      "*Video Received*\nYou sent a video to me.",
+      "*Video Received*\nYou sent a video to me, but don't have time to look at it right now, I'm stressed you, pal.",
       { parse_mode: "Markdown" }
     );
   });
   //receive voice content
   telegram.on("voice", (message) => {
+    console.log("VOICE");
     telegram.sendMessage(
       message.from.id,
-      "*Voice Received*\nYou sent a voice to me.",
+      "*Voice Received*\nYou sent a voice to me, you sound great I guess, but I can hear you slacking through it.",
       { parse_mode: "Markdown" }
     );
   });
@@ -252,7 +273,7 @@ telegram.on("text", (message) => {
   telegram.on("contact", (message) => {
     telegram.sendMessage(
       message.from.id,
-      "*Contact Received*\nYou sent a contact to me.",
+      "*Contact Received*\nYou sent a contact to me, but I can't do anything with that.",
       { parse_mode: "Markdown" }
     );
   });
@@ -260,7 +281,7 @@ telegram.on("text", (message) => {
   telegram.on("location", (message) => {
     telegram.sendMessage(
       message.from.id,
-      "*Location Received*\nYou sent a location to me.",
+      "*Location Received*\nYou sent a location to me, watch out, I might track you down and follow you home.",
       { parse_mode: "Markdown" }
     );
   });
