@@ -92,19 +92,73 @@ telegram.on("text", (message) => {
     //do some other weird stuff
     return;
   }
-//listen for a command with some text at the end of it
-if (message.text.toLowerCase().indexOf("/addstress") === 0) {
+  //listen for a command with some text at the end of it
+  if (message.text.toLowerCase().indexOf("/addstress") === 0) {
     //strip the command from the string, to get the user_text
-    var user_text = message.text.split("/addstress ");
-    console.log(user_text);
-    telegram.sendMessage(user_text);
-    if (user_text === "/addstress") {
-        // telegram.sendMessage(message.from.id, "What new task do you have to stress about?");
-    //   message.text
-
-        }
-        return;
+    //var user_text = message.text.split("/addstress ");
+    var user_text = message.text.slice(11);
+    if (user_text === "") {
+        telegram.sendMessage(
+          message.from.id, "What new task do you have to stress about?"
+        );
+    } else {
+      newStress(message.from.id, user_text);
+      telegram.sendMessage(
+        message.from.id, "I've added the task"
+      );
     }
+    //iterate through array to see what's stored
+    //tasklist.forEach(item => console.log(item));
+    return;
+  }
+
+  if (message.text.toLowerCase().indexOf("/done") === 0) {
+    //strip the command from the string, to get the user_text
+    var user_text = message.text.slice(6);
+    if (user_text === "") {
+        telegram.sendMessage(
+          message.from.id, "Which task are you done with?"
+        );
+
+    //check if its a valid "index" number
+    }
+      if(user_text > 0 && user_text <= tasklist.length) {
+        var doneTask = tasklist[user_array - 1];
+        telegram.sendMessage(
+          message.from.id, "Everyone, " + message.from.first_name + " is done with "
+          + doneTask.toString() + ". Better hurry up!"
+        );
+    }
+    //iterate through array to see what's stored
+    //tasklist.forEach(item => console.log(item));
+    return;
+  }
+
+  //listen for a command with some text at the end of it
+  if (message.text.toLowerCase().indexOf("/everyoneDone") === 0) {
+    //strip the command from the string, to get the user_text
+    var user_text = message.text.slice(14);
+    console.log(user_text);
+    if (user_text === "") {
+        telegram.sendMessage(
+          message.from.id, "Which task are you done with?"
+        );
+
+    //check if its a valid "index" number
+    }
+      if(user_text > 0 && user_text <= tasklist.length) {
+        var doneTask = tasklist.splice(user_text - 1, 1);
+        telegram.sendMessage(
+          message.from.id, "Everyone, " + message.from.first_name + " is done with "
+          + doneTask.toString() + ". Better hurry up!"
+        );
+    }
+    //need try-catch/one more for non-valid "index" numbers?
+
+    //iterate through array to see what's stored
+    //tasklist.forEach(item => console.log(item));
+    return;
+  }
 
   telegram.onText(/\/commands/, (msg) => {
     telegram.sendMessage(
@@ -201,7 +255,7 @@ telegram.on("location", (message) => {
     "*Location Received*\nYou sent a location to me.",
     { parse_mode: "Markdown" }
   );
-});
+});})
 
 // const axios = require("axios");
 // const Telegraf = require("telegraf"); // import telegraf lib
