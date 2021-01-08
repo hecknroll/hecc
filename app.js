@@ -64,97 +64,109 @@ function doneBotResponse(doneIndex, message) {
   }
 }
 
-//declare bot logic, on text event
-telegram.on("text", (message) => {
+// //declare bot logic, on text event
+// telegram.on("text", (message) => {
+telegram.onText(/\/start/, (message) => {
   //listen for 'start' bot command
-  if (message.text.toLowerCase().indexOf("/start") === 0) {
-    var user_text = message.text.replace("/start ", "");
-    if (user_text === "/start") {
+  //   if (message.text.toLowerCase().indexOf("/start") === 0) {
+  //     var user_text = message.text.replace("/start ", "");
+  //     if (user_text === "/start") {
+  telegram.sendMessage(
+    message.chat.id,
+    "Hello, I see " +
+      message.from.first_name +
+      " requires some peer pressure to keep up with your work. Welcome! Everyone shall be pressured together!",
+    {
+      parse_mode: "Markdown",
+    }
+  );
+});
+//   }
+//listen for 'hello' bot command
+telegram.onText(/\/hello/, (message) => {
+  //   if (message.text.toLowerCase().indexOf("/hello") === 0) {
+  //     var user_text = message.text.replace("/hello ", "");
+  //     if (user_text === "/hello") {
+  //then reply to the user with a message
+  telegram.sendMessage(message.chat.id, "Hello " + message.from.first_name);
+});
+
+//listen for 'pmMe' bot command
+telegram.onText(/\/pmme/, (message) => {
+  //   if (message.text.toLowerCase().indexOf("/pmme") === 0) {
+  //then reply to the user with a message
+  telegram.sendMessage(
+    message.from.id,
+    "Hello, my friend, " + message.from.first_name + ", you sneaky chump."
+  );
+});
+
+//listen for 'addStressor' bot command
+telegram.onText(/\/addstressor/, (message) => {
+  //   if (message.text.toLowerCase().indexOf("/addstressor") === 0) {
+  //strip the command from the string, to get the user_text
+  //var user_text = message.text.split("/addstress ");
+  telegram
+    .sendMessage(
+      message.chat.id,
+      "What new task would you like to stress everyone about?"
+    )
+    .then(() => {
+      return telegram.onNextMessage(
+        message.chat.id,
+        (message) => (stressor = message.text)
+      );
+    })
+    .then(() => {
+      newStress(message.chat.id, stressor);
       telegram.sendMessage(
         message.chat.id,
-        "Hello, I see " +
-          message.from.first_name +
-          " requires some peer pressure to keep up with your work. Welcome! Everyone shall be pressured together!",
-        {
-          parse_mode: "Markdown",
-        }
+        "I've added a new task to stress everyone with! Now we can all stress about " +
+          stressor +
+          " together. How exciting!"
       );
-    }
-  }
-  //listen for 'hello' bot command
-  if (message.text.toLowerCase().indexOf("/hello") === 0) {
-    var user_text = message.text.replace("/hello ", "");
-    if (user_text === "/hello") {
-      //then reply to the user with a message
-      telegram.sendMessage(message.chat.id, "Hello " + message.from.first_name);
-    }
-  }
+    });
+});
 
-  //listen for 'pmMe' bot command
-  if (message.text.toLowerCase().indexOf("/pmme") === 0) {
-    //then reply to the user with a message
-    telegram.sendMessage(
-      message.from.id,
-      "Hello, my friend, " + message.from.first_name + ", you sneaky chump."
-    );
-  }
-
-  //listen for 'addStressor' bot command
-  if (message.text.toLowerCase().indexOf("/addstressor") === 0) {
-    //strip the command from the string, to get the user_text
-    //var user_text = message.text.split("/addstress ");
-    telegram
-      .sendMessage(
+//listen for 'done' bot command
+telegram.onText(/\/done/, (message) => {
+  //   if (message.text.toLowerCase().indexOf("/done") === 0) {
+  //     //strip the command from the string, to get the user_text (aka index of done task)
+  //     var doneIndex = message.text.slice(6);
+  // if (doneIndex === "") {
+  telegram
+    .sendMessage(
+      message.chat.id,
+      "Which task are you done with?\nSend me the index of the task."
+    )
+    .then(() => {
+      return telegram.onNextMessage(
         message.chat.id,
-        "What new task would you like to stress everyone about?"
-      )
-      .then(() => {
-        return telegram.onNextMessage(
-          message.chat.id,
-          (message) => (stressor = message.text)
-        );
-      })
-      .then(() => {
-        newStress(message.chat.id, stressor);
-        telegram.sendMessage(
-          message.chat.id,
-          "I've added a new task to stress everyone with! Now we can all stress about " +
-            stressor +
-            " together. How exciting!"
-        );
-      });
-  }
-
-  //listen for 'done' bot command
-  if (message.text.toLowerCase().indexOf("/done") === 0) {
-    //strip the command from the string, to get the user_text (aka index of done task)
-    var doneIndex = message.text.slice(6);
-    if (doneIndex === "") {
-      telegram
-        .sendMessage(
-          message.chat.id,
-          "Which task are you done with?\nSend me the index of the task."
-        )
-        .then(() => {
-          return telegram.onNextMessage(
-            message.chat.id,
-            (message) => (doneIndex = message.text)
-          );
-        })
-        .then(() => {
-          doneBotResponse(doneIndex, message);
-        });
-      //check if its a valid "index" number
-    } else {
-      var doneIndex = message.text;
+        (message) => (doneIndex = message.text)
+      );
+    })
+    .then(() => {
       doneBotResponse(doneIndex, message);
-    }
-    //iterate through array to see what's stored
-    //tasklist.forEach(item => console.log(item));
-  }
+    });
+  //check if its a valid "index" number
+  // }
+  // else {
+  //   var doneIndex = message.text;
+  //   doneBotResponse(doneIndex, message);
+  // }
+  //iterate through array to see what's stored
+  //tasklist.forEach(item => console.log(item));
+});
 
-  //listen for 'listStressors' bot command
-  if (message.text.toLowerCase().indexOf("/liststressors") === 0) {
+//listen for 'listStressors' bot command
+telegram.onText(/\/liststressors/, (message) => {
+  //   if (message.text.toLowerCase().indexOf("/liststressors") === 0) {
+  if (tasklist.length === 0) {
+    telegram.sendMessage(
+      message.chat.id,
+      "Wow, it seems that you have nothing to stress about, are you sure?"
+    );
+  } else {
     let stressList = "";
     let i = 1;
     tasklist.forEach((stressor) => {
@@ -168,123 +180,130 @@ telegram.on("text", (message) => {
     //iterate through array to see what's stored
     //tasklist.forEach(item => console.log(item));
   }
+});
 
-  //listen for 'everyonesDone' bot command
-  if (message.text.toLowerCase().indexOf("/everyonesdone") === 0) {
-    //strip the command from the string, to get the user_text
-    var user_text = message.text.slice(14);
-    if (user_text === "") {
-      telegram.sendMessage(message.from.id, "Which task are you done with?");
+//listen for 'everyonesDone' bot command
+telegram.onText(/\/everyonesdone/, (message) => {
+  //   if (message.text.toLowerCase().indexOf("/everyonesdone") === 0) {
+  //strip the command from the string, to get the user_text
+  // var user_text = message.text.slice(14);
+  // if (user_text === "") {
 
-      //check if its a valid "index" number
-    }
-    if (user_text > 0 && user_text <= tasklist.length) {
-      var doneTask = tasklist.splice(user_text - 1, 1);
-      telegram.sendMessage(
-        message.from.id,
-        "Everyone, " +
-          message.from.first_name +
-          " is done with " +
-          doneTask.toString() +
-          ". Better hurry up or you'll be the last to finish!"
+  telegram
+    .sendMessage(
+      message.chat.id,
+      "Which task is everyone done with?\nSend me the index of the task."
+    )
+    .then(() => {
+      return telegram.onNextMessage(
+        message.chat.id,
+        (message) => (doneIndex = message.text)
       );
-    }
-    //need try-catch/one more for non-valid "index" numbers?
-
-    //iterate through array to see what's stored
-    //tasklist.forEach(item => console.log(item));
-  }
-
-  telegram.onText(/\/commands/, (msg) => {
-    telegram.sendMessage(
-      msg.chat.id,
-      "Here are all the commands that are currently available.",
-      {
-        reply_markup: {
-          keyboard: [
-            ["/start"],
-            ["/pmMe"],
-            ["/listStressors"],
-            ["/addStressor"],
-            ["/done"],
-            ["/everyonesDone"],
-          ],
-          one_time_keyboard: true,
-        },
+    })
+    .then(() => {
+      if (doneIndex > 0 && doneIndex <= tasklist.length) {
+        var doneTask = tasklist.splice(doneIndex - 1, 1);
+        telegram.sendMessage(
+          message.from.id,
+          "Looks like everyone is done with " +
+            doneTask.toString() +
+            ". Nice job everyone!"
+        );
       }
-    );
-  });
+    });
+});
 
-  //   //respond when user sends anything, not very safe, as you can imagine
-  //   telegram.on("message", (message) => {
-  //     //do something here, message is the variable that contains the JSON, say message.text, or message.photo, etc.
-  //   });
-  //receive image content
-  telegram.on("photo", (message) => {
-    telegram.sendMessage(
-      message.from.id,
-      "*Photograph Received*\nYou sent a photo to me.",
-      { parse_mode: "Markdown" }
-    );
-  });
-  //receive audio content
-  telegram.on("audio", (message) => {
-    telegram.sendMessage(
-      message.from.id,
-      "*Audio Received*\nYou sent audio to me, I would love to listen to it but I'm too busy stressing for you right now.",
-      { parse_mode: "Markdown" }
-    );
-  });
-  //receive document content
-  telegram.on("document", (message) => {
-    telegram.sendMessage(
-      message.from.id,
-      "*Document Received*\nYou sent a document to me, thanks but I can't help you with that.",
-      { parse_mode: "Markdown" }
-    );
-  });
-  //receive sticker content
-  telegram.on("sticker", (message) => {
-    console.log("aaaaa");
-    telegram.sendMessage(
-      message.from.id,
-      "*Sticker Received*\nYou sent a sticker to me, looks nice, but I have no use for it for now.",
-      { parse_mode: "Markdown" }
-    );
-  });
-  //receive video content
-  telegram.on("video", (message) => {
-    telegram.sendMessage(
-      message.from.id,
-      "*Video Received*\nYou sent a video to me, but don't have time to look at it right now, I'm stressed you, pal.",
-      { parse_mode: "Markdown" }
-    );
-  });
-  //receive voice content
-  telegram.on("voice", (message) => {
-    console.log("VOICE");
-    telegram.sendMessage(
-      message.from.id,
-      "*Voice Received*\nYou sent a voice to me, you sound great I guess, but I can hear you slacking through it.",
-      { parse_mode: "Markdown" }
-    );
-  });
-  //receive contact content
-  telegram.on("contact", (message) => {
-    telegram.sendMessage(
-      message.from.id,
-      "*Contact Received*\nYou sent a contact to me, but I can't do anything with that.",
-      { parse_mode: "Markdown" }
-    );
-  });
-  //receive location content
-  telegram.on("location", (message) => {
-    telegram.sendMessage(
-      message.from.id,
-      "*Location Received*\nYou sent a location to me, watch out, I might track you down and follow you home.",
-      { parse_mode: "Markdown" }
-    );
-  });
+telegram.onText(/\/commands/, (msg) => {
+  telegram.sendMessage(
+    msg.chat.id,
+    "Here are all the commands that are currently available.",
+    {
+      reply_markup: {
+        keyboard: [
+          ["/start"],
+          ["/pmme"],
+          ["/liststressors"],
+          ["/addstressor"],
+          ["/done"],
+          ["/everyonesdone"],
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+        force_reply: true,
+      },
+    }
+  );
+});
+
+//   //respond when user sends anything, not very safe, as you can imagine
+//   telegram.on("message", (message) => {
+//     //do something here, message is the variable that contains the JSON, say message.text, or message.photo, etc.
+//   });
+//receive image content
+telegram.on("photo", (message) => {
+  telegram.sendMessage(
+    message.from.id,
+    "*Photograph Received*\nYou sent a photo to me, I'm too busy to look at it right now but I hope it conveys how much work you actually have to do instead of looking at it.",
+    { parse_mode: "Markdown" }
+  );
+});
+//receive audio content
+telegram.on("audio", (message) => {
+  telegram.sendMessage(
+    message.from.id,
+    "*Audio Received*\nYou sent audio to me, I would love to listen to it but I'm too busy stressing for you right now.",
+    { parse_mode: "Markdown" }
+  );
+});
+//receive document content
+telegram.on("document", (message) => {
+  telegram.sendMessage(
+    message.from.id,
+    "*Document Received*\nYou sent a document to me, thanks but I can't help you with that.",
+    { parse_mode: "Markdown" }
+  );
+});
+//receive sticker content
+telegram.on("sticker", (message) => {
+  console.log("aaaaa");
+  telegram.sendMessage(
+    message.from.id,
+    "*Sticker Received*\nYou sent a sticker to me, looks cool, but I really have no use for it for now.",
+    { parse_mode: "Markdown" }
+  );
+});
+//receive video content
+telegram.on("video", (message) => {
+  telegram.sendMessage(
+    message.from.id,
+    "*Video Received*\nYou sent a video to me, but don't have time to look at it right now, I'm stressed for you, pal.",
+    { parse_mode: "Markdown" }
+  );
+});
+//receive voice content
+telegram.on("voice", (message) => {
+  console.log("VOICE");
+  telegram.sendMessage(
+    message.from.id,
+    "*Voice Received*\nYou sent a voice to me, you sound great I guess, but I can hear you stressfully slacking through it.",
+    { parse_mode: "Markdown" }
+  );
+});
+//receive contact content
+telegram.on("contact", (message) => {
+  telegram.sendMessage(
+    message.from.id,
+    "*Contact Received*\nYou sent a contact to me, but I can't do anything with that, maybe you can tell them about how much work you actually have to do.",
+    { parse_mode: "Markdown" }
+  );
+});
+//receive location content
+telegram.on("location", (message) => {
+  telegram.sendMessage(
+    message.from.id,
+    "*Location Received*\nYou sent a location to me, watch out, I might track you down and follow you home.",
+    { parse_mode: "Markdown" }
+  );
 });
 
 // const axios = require("axios");
